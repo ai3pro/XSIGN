@@ -1,209 +1,83 @@
-//
-//  SettingsView.swift
-//  Feather
-//
-//  Created by samara on 10.04.2025.
-//
-
 import SwiftUI
 import NimbleViews
-import UIKit
-import Darwin
-import IDeviceSwift
 
-// MARK: - View
 struct SettingsView: View {
-	@AppStorage("feather.selectedCert") private var _storedSelectedCert: Int = 0
-    @State private var _currentIcon: String? = UIApplication.shared.alternateIconName
-	
-	// MARK: Fetch
-	@FetchRequest(
-		entity: CertificatePair.entity(),
-		sortDescriptors: [NSSortDescriptor(keyPath: \CertificatePair.date, ascending: false)],
-		animation: .snappy
-	) private var _certificates: FetchedResults<CertificatePair>
-	
-	private var selectedCertificate: CertificatePair? {
-		guard
-			_storedSelectedCert >= 0,
-			_storedSelectedCert < _certificates.count
-		else {
-			return nil
-		}
-		return _certificates[_storedSelectedCert]
-	}
-
-    
-    private let _donationsUrl = "https://github.com/sponsors/khcrysalis"
-    private let _githubUrl = "https://github.com/khcrysalis/Feather"
-	private let _discordServer = "https://discord.gg/TYnUDJkG66"
-    
-    // MARK: Body
     var body: some View {
-        NBNavigationView(.localized("Settings")) {
-            Form {
-				#if !NIGHTLY && !DEBUG
-                SettingsDonationCellView(site: _donationsUrl)
-				#endif
-                
-                _feedback()
-                
+        NavigationView {
+            List {
+                // PHẦN 1: HEADER THAISON IOS (Hiệu ứng đẹp)
                 Section {
-                    NavigationLink(destination: AppearanceView()) {
-                        Label(.localized("Appearance"), systemImage: "paintbrush")
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 8) {
+                            Text("ThaiSon iOS")
+                                .font(.system(size: 30, weight: .heavy, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .purple, .pink],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .shadow(color: .blue.opacity(0.5), radius: 5, x: 0, y: 2)
+                            
+                            Text("Phiên bản XSign Premium")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
                     }
-					NavigationLink(destination: AppIconView(currentIcon: $_currentIcon)) {
-						Label(.localized("App Icon"), systemImage: "app.badge")
-					}
+                    .padding(.vertical, 20)
+                    .listRowBackground(Color.clear)
                 }
                 
-                NBSection(.localized("Certificates")) {
-                    
-                    if let cert = selectedCertificate {
-                        CertificatesCellView(cert: cert)
-                    } else {
-                        Text(.localized("No Certificate"))
-                            .font(.footnote)
-                            .foregroundColor(.disabled())
+                // PHẦN 2: MUA CHỨNG CHỈ (Nổi bật)
+                Section {
+                    Link(destination: URL(string: "https://zalo.me/sdt_cua_ban")!) {
+                        HStack {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(.yellow)
+                            VStack(alignment: .leading) {
+                                Text("Mua chứng chỉ VIP")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text("Chỉ 75k/năm - Bảo hành 1:1")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
                     }
+                } header: {
+                    Text("Dịch vụ VIP")
+                }
+                
+                // PHẦN 3: CÁC CÀI ĐẶT CẦN THIẾT (Giữ lại tính năng ký)
+                Section(header: Text("Quản lý ký")) {
                     NavigationLink(destination: CertificatesView()) {
-                        Label(.localized("Certificates"), systemImage: "checkmark.seal")
+                        Label("Quản lý Chứng chỉ", systemImage: "signature")
                     }
-                 
-                } footer: {
-                    Text(.localized("Add and manage certificates used for signing applications."))
-                }
-                
-                NBSection(.localized("Features")) {
+                    
                     NavigationLink(destination: ConfigurationView()) {
-                        Label(.localized("Signing Options"), systemImage: "signature")
+                        Label("Tùy chỉnh Ký (Signing)", systemImage: "gearshape.2")
                     }
+                    
                     NavigationLink(destination: ArchiveView()) {
-                        Label(.localized("Archive & Compression"), systemImage: "archivebox")
+                        Label("Nén & Giải nén", systemImage: "archivebox")
                     }
-                    NavigationLink(destination: InstallationView()) {
-                        Label(.localized("Installation"), systemImage: "arrow.down.circle")
-                    }
-                } footer: {
-                    Text(.localized("Configure the apps way of installing, its zip compression levels, and custom modifications to apps."))
                 }
                 
-                _directories()
-                
-                Section {
+                // PHẦN 4: HỆ THỐNG
+                Section(header: Text("Hệ thống")) {
                     NavigationLink(destination: ResetView()) {
-                        Label(.localized("Reset"), systemImage: "trash")
+                        Label("Đặt lại ứng dụng", systemImage: "trash")
+                            .foregroundColor(.red)
                     }
-                } footer: {
-                    Text(.localized("Reset the applications sources, certificates, apps, and general contents."))
                 }
             }
+            .navigationTitle("Cài đặt")
         }
-    }
-}
-
-// MARK: - View extension
-extension SettingsView {
-    @ViewBuilder
-    private func _feedback() -> some View {
-        Section {
-            NavigationLink(destination: AboutView()) {
-                Label {
-                    Text(verbatim: .localized("About %@", arguments: Bundle.main.name))
-                } icon: {
-                    Image(uiImage: AppIconView.altImage(_currentIcon))
-                        .appIconStyle(size: 23)
-                }
-            }
-            
-            Button(.localized("Submit Feedback"), systemImage: "safari") {
-				let bugAction: UIAlertAction = .init(title: .localized("Bug Report"), style: .default) { _ in
-					UIApplication.open(_makeGitHubIssueURL(url: _githubUrl))
-				}
-				
-				let chooseAction: UIAlertAction = .init(title: .localized("Other"), style: .default) { _ in
-					UIApplication.open(URL(string: "\(_githubUrl)/issues/new/choose")!)
-				}
-				
-				UIAlertController.showAlertWithCancel(
-					title: .localized("Submit Feedback"),
-					message: nil,
-					actions: [bugAction, chooseAction]
-				)
-            }
-            Button(.localized("GitHub Repository"), systemImage: "safari") {
-                UIApplication.open(_githubUrl)
-            }
-			Button(.localized("Join Us on Discord"), systemImage: "safari") {
-				UIApplication.open(_discordServer)
-			}
-        } footer: {
-            Text(.localized("If any issues occur within the app please report it via the GitHub repository. When submitting an issue, make sure to submit detailed information."))
-        }
-    }
-    
-    @ViewBuilder
-    private func _directories() -> some View {
-        NBSection(.localized("Misc")) {
-            Button(.localized("Open Documents"), systemImage: "folder") {
-                UIApplication.open(URL.documentsDirectory.toSharedDocumentsURL()!)
-            }
-            Button(.localized("Open Archives"), systemImage: "folder") {
-                UIApplication.open(FileManager.default.archives.toSharedDocumentsURL()!)
-            }
-            Button(.localized("Open Certificates"), systemImage: "folder") {
-                UIApplication.open(FileManager.default.certificates.toSharedDocumentsURL()!)
-            }
-        } footer: {
-            Text(.localized("All of the apps files are contained in the documents directory, here are some quick links to these."))
-        }
-    }
-    
-    private func _makeGitHubIssueURL(url: String) -> String {
-        var configurationSection = "### App Configuration:\n"
-		
-        switch UserDefaults.standard.integer(forKey: "Feather.installationMethod") {
-        case 0: // Server
-            let serverMethod = UserDefaults.standard.integer(forKey: "Feather.serverMethod")
-            let ipFix = UserDefaults.standard.bool(forKey: "Feather.ipFix")
-            let serverType = (serverMethod == 0) ? "Fully Local" : "Semi Local"
-            configurationSection += "- Install method: `Server`\n"
-            configurationSection += "  - Server type: `\(serverType)`\n"
-            configurationSection += "  - IP Fix: `\(ipFix)`\n"
-        case 1: // idevice
-            let pairingPath = HeartbeatManager.pairingFile()
-            let pairingExists = FileManager.default.fileExists(atPath: pairingPath)
-            let pairingStatus = pairingExists ? "`Present`" : "`Not Present`"
-            configurationSection += "- Install method: `idevice`\n"
-            configurationSection += "  - Pairing file: \(pairingStatus)\n"
-        default:
-            configurationSection += "- Install method: `Unknown`\n"
-        }
-        
-        let body = """
-		### Device Information
-		- Device: `\(MobileGestalt().getStringForName("PhysicalHardwareNameString") ?? "Unknown")`
-		- iOS Version: `\(UIDevice.current.systemVersion)`
-		- App Version: `\(Bundle.main.version)`
-		
-		\(configurationSection)
-		
-		### Issue Description
-		<!-- Describe your issue here -->
-		
-		### Steps to Reproduce
-		1. 
-		2. 
-		3. 
-		
-		### Expected Behavior
-		
-		### Actual Behavior
-		"""
-        let encodedTitle = "[Bug] replace this with a descriptive title "
-			.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedBody = body
-			.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return "\(url)/issues/new?template=bug.yml&title=\(encodedTitle)&text=\(encodedBody)"
     }
 }
