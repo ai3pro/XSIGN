@@ -1,58 +1,64 @@
 import SwiftUI
 import Nuke
-import IDeviceSwift
 
 @main
-struct XSignApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject var downloadManager = DownloadManager.shared
-    let storage = Storage.shared
+struct FeatherApp: App {
+    // Màu chủ đạo thương hiệu ThaiSon iOS (Xanh Navy đậm sang trọng)
+    // Bạn có thể đổi thành màu khác, ví dụ .orange hoặc một mã hex cụ thể
+    let brandColor: Color = Color(red: 0.0, green: 0.12, blue: 0.35) 
     
-    // MÀU CHỦ ĐẠO: Bạn có thể đổi mã Hex này (ví dụ: #FF0000 là đỏ)
-    // Màu Vàng Gold
-let themeColor = UIColor(red: 1.00, green: 0.84, blue: 0.00, alpha: 1.0)
-
+    init() {
+        // Cấu hình giao diện chuẩn Apple khi khởi động
+        setupAppearance()
+    }
+    
     var body: some Scene {
         WindowGroup {
-            VStack {
-                DownloadHeaderView(downloadManager: downloadManager)
-                VariedTabbarView()
-                    .environment(\.managedObjectContext, storage.context)
-                    .onOpenURL(perform: handleURL)
+            // SỬ DỤNG TABVIEW CHUẨN CỦA APPLE
+            TabView {
+                // Tab 1: Kho Ứng dụng
+                NavigationView {
+                    LibraryView() // Giữ lại logic thư viện cũ, nhưng đặt trong NavView
+                        .navigationTitle("Kho Ứng Dụng")
+                }
+                .tabItem {
+                    Label("Ứng dụng", systemImage: "square.grid.2x2.fill")
+                }
+                
+                // Tab 2: VIP & Ký (Gộp lại cho gọn)
+                NavigationView {
+                    BuyCertView()
+                }
+                .tabItem {
+                    Label("VIP & Ký", systemImage: "signature")
+                }
+                
+                // Tab 3: Cài đặt & Thương hiệu
+                NavigationView {
+                    SettingsView()
+                }
+                .tabItem {
+                    Label("Cài đặt", systemImage: "gear")
+                }
             }
-            .accentColor(Color(themeColor)) // Ép toàn bộ app theo màu này
-            .onAppear {
-                // Ép giao diện Sáng/Tối theo ý bạn (ở đây là tự động)
-                UIApplication.topViewController()?.view.window?.tintColor = themeColor
-            }
+            .accentColor(brandColor) // Áp dụng màu thương hiệu lên toàn bộ icon, nút bấm
         }
     }
-
-    private func handleURL(_ url: URL) {
-        // Xử lý link xsign://
-        if url.scheme == "xsign" {
-            if let fullPath = url.validatedScheme(after: "/install/"),
-               let downloadURL = URL(string: fullPath) {
-                _ = DownloadManager.shared.startDownload(from: downloadURL)
-            }
-        } else {
-            // Mở file .ipa trực tiếp
-            if url.pathExtension == "ipa" {
-                FR.handlePackageFile(url) { _ in }
-            }
-        }
-    }
-}
-
-class AppDelegate: NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Khởi tạo bộ nhớ đệm hình ảnh
-        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
-        // Tạo các thư mục cần thiết
-        let fileManager = FileManager.default
-        [fileManager.archives, fileManager.certificates, fileManager.signed].forEach {
-            try? fileManager.createDirectoryIfNeeded(at: $0)
-        }
-        return true
+    
+    func setupAppearance() {
+        // Cấu hình Navigation Bar trong suốt kiểu hiện đại
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithTransparentBackground()
+        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor(brandColor)]
+        navAppearance.titleTextAttributes = [.foregroundColor: UIColor(brandColor)]
+        
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        
+        // Cấu hình Tab Bar trong suốt mờ (Translucent)
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithDefaultBackground()
+        UITabBar.appearance().standardAppearance = tabAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
     }
 }
