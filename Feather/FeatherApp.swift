@@ -4,7 +4,7 @@ import IDeviceSwift
 
 @main
 struct FeatherApp: App {
-    // 1. GIỮ LẠI BỘ ĐỘNG CƠ CŨ (QUAN TRỌNG)
+    // 1. KHÔI PHỤC BỘ ĐỘNG CƠ CŨ (QUAN TRỌNG ĐỂ KHÔNG BỊ LỖI 65)
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var downloadManager = DownloadManager.shared
     let storage = Storage.shared
@@ -83,7 +83,7 @@ struct FeatherApp: App {
     }
 }
 
-// LỚP CẤU HÌNH HỆ THỐNG (Không được xóa cái này)
+// LỚP CẤU HÌNH HỆ THỐNG (Class này bị thiếu ở bước trước gây lỗi 65)
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Cấu hình bộ nhớ đệm ảnh (Nuke)
