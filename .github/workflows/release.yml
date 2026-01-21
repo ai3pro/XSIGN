@@ -1,43 +1,53 @@
-name: Create New Release
+name: Build XSign Release
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          submodules: 'true'
-      
-      - name: Use Xcode 26.2
-        run: |
-          sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+          submodules: recursive
 
-      - name: Compile Feather
-        run: | 
-          agvtool new-version -all $(git rev-parse HEAD)
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build XSign
+        run: |
+          # Cập nhật phiên bản build dựa trên mã commit
+          agvtool new-version -all $(git rev-parse --short HEAD)
+          
+          # Chạy lệnh build (dùng Makefile có sẵn)
           make
-          mkdir upload
-          mv packages/* upload/
+          
+          # Tạo thư mục chứa file để upload
+          mkdir upload_folder
+          
+          # QUAN TRỌNG: Tìm file ipa vừa tạo và đổi tên thành XSign.ipa
+          mv packages/*.ipa upload_folder/XSign.ipa
 
       - name: Get Version
         id: get_version
         run: |
-          VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Payload/*.app/Info.plist)
+          # Lấy số phiên bản từ file Info.plist để đặt tên cho Release
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Feather/Resources/Info.plist)
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Feather v${{ env.VERSION }}
-          tag_name: v${{ env.VERSION }}
-          files: |
-            upload/*ipa
+          name: XSign v${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}-${{ github.run_number }}
+          files: upload_folder/XSign.ipa
+          draft: false
+          prerelease: false
           generate_release_notes: true
-          fail_on_unmatched_files: true
-          draft: true
         env:
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
