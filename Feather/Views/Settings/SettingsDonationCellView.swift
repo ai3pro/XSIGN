@@ -1,88 +1,70 @@
-//
-//  SettingsDonationCellView.swift
-//  Feather
-//
-//  Created by samara on 30.04.2025.
-//
-
-#if !NIGHTLY && !DEBUG
 import SwiftUI
-import NimbleViews
 
-struct SettingsDonationCellView: View {
-	var site: String
-	
-	var body: some View {
-		Section {
-			VStack(spacing: 14) {
-				_title()
-				_benefit(
-					.localized("Remove this Alert"),
-					.localized("Remove annoying alerts like these after getting beta access!"),
-					systemName: "heart.text.square.fill"
-				)
-				_benefit(
-					.localized("Show Your Support"),
-					.localized("Show your support by donating! If you're unable to donate, spreading the word works too!"),
-					systemName: "heart.fill"
-				)
-				
-				Button() {
-					UIApplication.open(site)
-				} label: {
-					_sheetButton(.localized("Donate"))
-				}
-				.frame(height: 45)
-			}
-			.padding(.vertical, 12)
-			.buttonStyle(.plain)
-		}
-	}
-	
-	@ViewBuilder
-	private func _title() -> some View {
-		VStack(alignment: .center, spacing: 12) {
-			Image(systemName: "heart")
-				.font(.system(size: 38, weight: .bold))
-				.foregroundStyle(.pink)
-			
-			Text(.localized("Donations"))
-				.font(.title)
-				.bold()
-		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-	}
-	
-	@ViewBuilder
-	private func _benefit(
-		_ title: String,
-		_ desc: String,
-		systemName: String
-	) -> some View {
-		HStack(alignment: .center, spacing: 14) {
-			Image(systemName: systemName)
-				.font(.system(size: 32))
-				.foregroundStyle(.tint)
-				.frame(width: 39, alignment: .center)
-			
-			NBTitleWithSubtitleView(
-				title: title,
-				subtitle: desc
-			).fixedSize(horizontal: false, vertical: true)
-		}
-	}
-	
-	@ViewBuilder
-	private func _sheetButton(_ title: String) -> some View {
-		Text(title)
-			.frame(maxWidth: .infinity, maxHeight: .infinity)
-			.background(Color.accentColor)
-			.foregroundColor(.white)
-			.clipShape(
-				RoundedRectangle(cornerRadius: 12, style: .continuous)
-			)
-			.bold()
-	}
+struct BuyCertView: View {
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Màu nền Gradient đẹp mắt
+                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 25) {
+                    Image(systemName: "crown.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 80, height: 80)
+                        .foregroundColor(.yellow)
+                        .shadow(color: .orange, radius: 10)
+                    
+                    Text("ThaiSon iOS VIP")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    
+                    Text("Sở hữu chứng chỉ cá nhân ổn định\nKhông bị thu hồi, bảo hành 1 năm.")
+                        .multilineTextAlignment(.center)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                    
+                    // Thẻ giá tiền
+                    VStack {
+                        Text("Gói Siêu Tốc")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        Text("75.000đ / Năm")
+                            .font(.system(size: 28, weight: .heavy))
+                            .foregroundColor(.yellow)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(20)
+                    .shadow(radius: 5)
+                    .padding(.horizontal, 40)
+                    
+                    Spacer()
+                    
+                    // Nút mua hàng
+                    Link(destination: URL(string: "https://zalo.me/sdt_cua_ban")!) { // Thay link Zalo/Facebook của bạn vào đây
+                        HStack {
+                            Image(systemName: "cart.fill")
+                            Text("MUA NGAY (ZALO/FB)")
+                                .fontWeight(.bold)
+                        }
+                        .font(.title3)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.green, Color.teal]), startPoint: .leading, endPoint: .trailing))
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        .shadow(radius: 5)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
+                }
+                .padding(.top, 40)
+            }
+            .navigationTitle("Nâng cấp VIP")
+        }
+    }
 }
-
-#endif
