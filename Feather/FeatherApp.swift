@@ -9,8 +9,8 @@ struct XSignApp: App {
     let storage = Storage.shared
     
     // MÀU CHỦ ĐẠO: Bạn có thể đổi mã Hex này (ví dụ: #FF0000 là đỏ)
-    // Màu Tím Neon pha Xanh (Rất đẹp trên nền tối)
-let themeColor = UIColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.0)
+    // Màu Vàng Gold
+let themeColor = UIColor(red: 1.00, green: 0.84, blue: 0.00, alpha: 1.0)
 
     var body: some Scene {
         WindowGroup {
