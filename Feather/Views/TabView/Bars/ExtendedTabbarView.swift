@@ -1,5 +1,5 @@
 //
-//  TabbarController.swift
+//  ExtendedTabbarView.swift
 //  feather
 //
 //  Created by samara on 5/17/24.
@@ -11,97 +11,48 @@ import NukeUI
 
 @available(iOS 18, *)
 struct ExtendedTabbarView: View {
-	@Environment(\.horizontalSizeClass) var horizontalSizeClass
-	@AppStorage("Feather.tabCustomization") var customization = TabViewCustomization()
-	@StateObject var viewModel = SourcesViewModel.shared
-	
-	@State private var _isAddingPresenting = false
-	
-	@FetchRequest(
-		entity: AltSource.entity(),
-		sortDescriptors: [NSSortDescriptor(keyPath: \AltSource.name, ascending: true)],
-		animation: .snappy
-	) private var _sources: FetchedResults<AltSource>
-		
-	var body: some View {
-		TabView {
-			ForEach(TabEnum.defaultTabs, id: \.hashValue) { tab in
-				Tab(tab.title, systemImage: tab.icon) {
-					TabEnum.view(for: tab)
-				}
-			}
-			
-			ForEach(TabEnum.customizableTabs, id: \.hashValue) { tab in
-				Tab(tab.title, systemImage: tab.icon) {
-					TabEnum.view(for: tab)
-				}
-				.customizationID("tab.\(tab.rawValue)")
-				.defaultVisibility(.hidden, for: .tabBar)
-				.customizationBehavior(.reorderable, for: .tabBar, .sidebar)
-				.hidden(horizontalSizeClass == .compact)
-			}
-			
-			TabSection("Sources") {
-				Tab(.localized("All Repositories"), systemImage: "globe.desk") {
-					NavigationStack {
-						SourceAppsView(object: Array(_sources), viewModel: viewModel)
-					}
-				}
-				
-				ForEach(_sources, id: \.identifier) { source in
-					Tab {
-						NavigationStack {
-							SourceAppsView(object: [source], viewModel: viewModel)
-						}
-					} label: {
-						_icon(source.name ?? .localized("Unknown"), iconUrl: source.iconURL)
-					}
-					.swipeActions {
-						Button(.localized("Delete"), systemImage: "trash", role: .destructive) {
-							Storage.shared.deleteSource(for: source)
-						}
-					}
-				}
-			}
-			.sectionActions {
-				Button(.localized("Add Source"), systemImage: "plus") {
-					_isAddingPresenting = true
-				}
-			}
-			.defaultVisibility(.hidden, for: .tabBar)
-			.hidden(horizontalSizeClass == .compact)
-		}
-		.tabViewStyle(.sidebarAdaptable)
-		.tabViewCustomization($customization)
-		.sheet(isPresented: $_isAddingPresenting) {
-			SourcesAddView()
-				.presentationDetents([.medium])
-		}
-	}
-	
-	@ViewBuilder
-	private func _icon(_ title: String, iconUrl: URL?) -> some View {
-		Label {
-			Text(title)
-		} icon: {
-			if let iconURL = iconUrl {
-				LazyImage(url: iconURL) { state in
-					if let image = state.image {
-						image
-					} else {
-						standardIcon
-					}
-				}
-				.processors([.resize(width: 14), .circle()])
-			} else {
-				standardIcon
-			}
-		}
-	}
-
-	
-	var standardIcon: some View {
-		Image(systemName: "app.dashed")
-	}
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @AppStorage("Feather.tabCustomization") var customization = TabViewCustomization()
+    @StateObject var viewModel = SourcesViewModel.shared
+    
+    @State private var _isAddingPresenting = false
+    
+    // Logic tương thích ngược cho TabBar cũ
+    var body: some View {
+        TabView {
+            // SỬA: Dùng Tab.allCases thay vì TabEnum.defaultTabs
+            ForEach(Tab.allCases, id: \.self) { tab in
+                Tab(tab.title, systemImage: tab.icon) {
+                    view(for: tab)
+                }
+            }
+            
+            // Phần Sources cũ (có thể giữ lại nếu muốn hiển thị Sources trong tab bar cũ)
+            /*
+            TabSection("Sources") {
+               // ... (Giữ nguyên logic cũ nếu cần, hoặc comment lại nếu không dùng)
+            }
+            */
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        .tabViewCustomization($customization)
+    }
+    
+    // Helper để trả về View tương ứng cho Tab
+    @ViewBuilder
+    func view(for tab: Tab) -> some View {
+        switch tab {
+        case .library:
+            LibraryView()
+        case .buyCert:
+            BuyCertView()
+        case .settings:
+            SettingsView()
+        }
+    }
+    
+    // ... (Giữ lại các helper khác nếu cần)
+    var standardIcon: some View {
+        Image(systemName: "app.dashed")
+    }
 }
-
