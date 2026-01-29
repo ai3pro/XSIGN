@@ -12,9 +12,10 @@ struct FeatherApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Chạy giao diện mới
             RootView()
                 .environment(\.managedObjectContext, storage.context)
+                // FIX LỖI CRASH: Bơm object này vào môi trường để các view con dùng
+                .environmentObject(downloadManager)
                 .accentColor(brandColor)
                 .onOpenURL(perform: handleURL)
                 .onAppear {
