@@ -9,73 +9,78 @@ import Foundation
 import AltSourceKit
 import SwiftUI
 import NimbleJSON
+import CoreData
 
 // MARK: - Class
 final class SourcesViewModel: ObservableObject {
-	static let shared = SourcesViewModel()
-	
-	typealias RepositoryDataHandler = Result<ASRepository, Error>
-	
-	private let _dataService = NBFetchService()
-	
-	var isFinished = true
-	@Published var sources: [AltSource: ASRepository] = [:]
-	
-	func fetchSources(_ sources: FetchedResults<AltSource>, refresh: Bool = false, batchSize: Int = 4) async {
-		guard isFinished else { return }
-		
-		// check if sources to be fetched are the same as before, if yes, return
-		// also skip check if refresh is true
-		if !refresh, sources.allSatisfy({ self.sources[$0] != nil }) { return }
-		
-		// isfinished is used to prevent multiple fetches at the same time
-		isFinished = false
-		defer { isFinished = true }
-		
-		await MainActor.run {
-			self.sources = [:]
-		}
-		
-		let sourcesArray = Array(sources)
-		
-		for startIndex in stride(from: 0, to: sourcesArray.count, by: batchSize) {
-			let endIndex = min(startIndex + batchSize, sourcesArray.count)
-			let batch = sourcesArray[startIndex..<endIndex]
-			
-			let batchResults = await withTaskGroup(of: (AltSource, ASRepository?).self, returning: [AltSource: ASRepository].self) { group in
-				for source in batch {
-					group.addTask {
-						guard let url = source.sourceURL else {
-							return (source, nil)
-						}
-						
-						return await withCheckedContinuation { continuation in
-							self._dataService.fetch(from: url) { (result: RepositoryDataHandler) in
-								switch result {
-								case .success(let repo):
-									continuation.resume(returning: (source, repo))
-								case .failure(_):
-									continuation.resume(returning: (source, nil))
-								}
-							}
-						}
-					}
-				}
-				
-				var results = [AltSource: ASRepository]()
-				for await (source, repo) in group {
-					if let repo {
-						results[source] = repo
-					}
-				}
-				return results
-			}
-			
-			await MainActor.run {
-				for (source, repo) in batchResults {
-					self.sources[source] = repo
-				}
-			}
-		}
-	}
+    static let shared = SourcesViewModel()
+    
+    typealias RepositoryDataHandler = Result<ASRepository, Error>
+    
+    private let _dataService = NBFetchService()
+    
+    var isFinished = true
+    @Published var sources: [AltSource: ASRepository] = [:]
+    
+    func fetchSources(_ sources: FetchedResults<AltSource>, refresh: Bool = false, batchSize: Int = 4) async {
+        guard isFinished else { return }
+        
+        if !refresh, sources.allSatisfy({ self.sources[$0] != nil }) { return }
+        
+        isFinished = false
+        defer { isFinished = true }
+        
+        await MainActor.run {
+            self.sources = [:]
+        }
+        
+        let sourcesArray = Array(sources)
+        let context = PersistenceController.shared.container.viewContext
+        
+        for startIndex in stride(from: 0, to: sourcesArray.count, by: batchSize) {
+            let endIndex = min(startIndex + batchSize, sourcesArray.count)
+            let batch = sourcesArray[startIndex..<endIndex]
+            
+            // SỬA LỖI: Chỉ trích xuất dữ liệu cần thiết (ID và URL), không truyền AltSource vào Task
+            let batchData = batch.map { (id: $0.objectID, url: $0.sourceURL) }
+            
+            let batchResults = await withTaskGroup(of: (NSManagedObjectID, ASRepository?).self, returning: [NSManagedObjectID: ASRepository].self) { group in
+                for item in batchData {
+                    group.addTask {
+                        guard let url = item.url else {
+                            return (item.id, nil)
+                        }
+                        
+                        return await withCheckedContinuation { continuation in
+                            self._dataService.fetch(from: url) { (result: RepositoryDataHandler) in
+                                switch result {
+                                case .success(let repo):
+                                    continuation.resume(returning: (item.id, repo))
+                                case .failure(_):
+                                    continuation.resume(returning: (item.id, nil))
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                var results = [NSManagedObjectID: ASRepository]()
+                for await (id, repo) in group {
+                    if let repo {
+                        results[id] = repo
+                    }
+                }
+                return results
+            }
+            
+            await MainActor.run {
+                for (id, repo) in batchResults {
+                    // Tái tạo lại object từ ID trên Main Thread
+                    if let source = try? context.existingObject(with: id) as? AltSource {
+                        self.sources[source] = repo
+                    }
+                }
+            }
+        }
+    }
 }
