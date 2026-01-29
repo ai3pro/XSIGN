@@ -1,10 +1,9 @@
 import SwiftUI
 
 struct RootView: View {
-    @State var currentTab: AppTab = .library
+    @State var currentTab: AppTab = .library // Dùng AppTab
     
     init() {
-        // Ẩn tab bar mặc định của hệ thống
         UITabBar.appearance().isHidden = true
     }
     
@@ -28,7 +27,6 @@ struct RootView: View {
                 .tag(AppTab.settings)
             }
             
-            // Thanh Tab Nổi
             CustomTabBar(currentTab: $currentTab)
                 .padding(.bottom, 10)
         }
