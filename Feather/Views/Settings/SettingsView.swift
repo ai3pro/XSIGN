@@ -7,7 +7,7 @@ struct SettingsView: View {
             // --- PHẦN 1: HEADER THƯƠNG HIỆU (Tối giản, Sang trọng) ---
             Section {
                 HStack(spacing: 15) {
-                    // Logo thương hiệu (Bạn nên thay file AppIcon bằng logo của bạn)
+                    // Logo thương hiệu
                     Image(uiImage: UIImage(named: "AppIcon") ?? UIImage())
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -17,7 +17,7 @@ struct SettingsView: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text("ThaiSon iOS")
-                            .font(.title2) // Font to vừa phải, không quá lố
+                            .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
                         
@@ -28,14 +28,14 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 10)
             }
-            .listRowBackground(Color.clear) // Làm nền trong suốt để nổi bật header
+            .listRowBackground(Color.clear)
             
             // --- PHẦN 2: DỊCH VỤ CỐT LÕI (VIP) ---
             Section(header: Text("Dịch vụ")) {
                 NavigationLink(destination: BuyCertView()) {
                     HStack {
                         Image(systemName: "crown.fill")
-                            .foregroundColor(.yellow) // Màu vàng vương miện nổi bật
+                            .foregroundColor(.yellow)
                             .font(.title3)
                             .frame(width: 30)
                         
@@ -50,7 +50,7 @@ struct SettingsView: View {
                 }
             }
             
-            // --- PHẦN 3: QUẢN LÝ KỸ THUẬT (Dùng icon chuẩn Apple) ---
+            // --- PHẦN 3: QUẢN LÝ KỸ THUẬT ---
             Section(header: Text("Quản lý Ký")) {
                 NavigationLink(destination: CertificatesView()) {
                     Label("Chứng chỉ của bạn", systemImage: "doc.text.fill")
@@ -67,7 +67,7 @@ struct SettingsView: View {
                 }
                 NavigationLink(destination: ResetView()) {
                     Label("Đặt lại ứng dụng", systemImage: "arrow.counterclockwise")
-                        .foregroundColor(.red) // Màu đỏ cảnh báo
+                        .foregroundColor(.red)
                 }
             }
             
@@ -77,13 +77,14 @@ struct SettingsView: View {
                     Spacer()
                     Text("Designed by ThaiSon iOS © 2026")
                         .font(.footnote)
-                        .foregroundColor(.tertiaryLabel)
+                        // SỬA: Chuyển đổi UIColor.tertiaryLabel sang Color chuẩn SwiftUI
+                        .foregroundColor(Color(UIColor.tertiaryLabel))
                     Spacer()
                 }
                 .listRowBackground(Color.clear)
             }
         }
-        .listStyle(.insetGrouped) // KIỂU GIAO DIỆN CHUẨN APPLE SETTINGS
+        .listStyle(.insetGrouped)
         .navigationTitle("Cài đặt")
     }
 }
