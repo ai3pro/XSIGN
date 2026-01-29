@@ -28,7 +28,8 @@ struct AppearanceTintColorView: View {
 		ScrollView(.horizontal, showsIndicators: false) {
 			LazyHGrid(rows: [GridItem(.fixed(100))], spacing: 12) {
 				ForEach(tintOptions, id: \.hex) { option in
-					let color = Color(hex: option.hex)
+                    // SỬA: Dùng safeHex để tránh lỗi ambiguous
+					let color = Color(safeHex: option.hex) ?? Color.blue 
 					let cornerRadius = {
 						if #available(iOS 26.0, *) {
 							28.0
@@ -64,7 +65,8 @@ struct AppearanceTintColorView: View {
 			}
 		}
 		.onChange(of: selectedColorHex) { value in
-			UIApplication.topViewController()?.view.window?.tintColor = UIColor(Color(hex: value))
+            // SỬA: Dùng safeHex
+			UIApplication.topViewController()?.view.window?.tintColor = UIColor(Color(safeHex: value) ?? .blue)
 		}
 	}
 }
