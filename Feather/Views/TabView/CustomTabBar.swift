@@ -1,10 +1,9 @@
 import SwiftUI
 
 struct CustomTabBar: View {
-    @Binding var currentTab: AppTab // Sử dụng AppTab
+    @Binding var currentTab: AppTab // Dùng AppTab
     @Namespace var animation
     
-    // Màu Xanh Navy
     let brandColor = Color(red: 0.0, green: 0.12, blue: 0.35)
     
     var body: some View {
@@ -23,7 +22,7 @@ struct CustomTabBar: View {
                             .scaleEffect(currentTab == tab ? 1.2 : 1.0)
                         
                         if currentTab == tab {
-                            Text(tab.title)
+                            Text(tab.rawValue)
                                 .font(.caption2)
                                 .fontWeight(.bold)
                                 .transition(.opacity.combined(with: .move(edge: .bottom)))
