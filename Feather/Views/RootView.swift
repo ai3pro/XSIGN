@@ -18,12 +18,12 @@ struct RootView: View {
                 }
                 .tag(AppTab.library)
                 
-                // Thêm màn hình Nguồn
+                // Màn hình Nguồn iPA
                 NavigationView {
                     SourcesView()
                         .navigationTitle("Nguồn iPA")
                 }
-                .tag(AppTab.sources)
+                .tag(AppTab.sources) // Đảm bảo bạn đã thêm case sources vào AppTab
                 
                 NavigationView {
                     BuyCertView()
@@ -35,7 +35,7 @@ struct RootView: View {
                 }
                 .tag(AppTab.settings)
             }
-            // FIX LỖI THỤT: Đẩy nội dung lên để không bị Tabbar che mất
+            // 👇 [QUAN TRỌNG] Dòng này đẩy nội dung lên để không bị Tabbar che mất 👇
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: 80)
             }
