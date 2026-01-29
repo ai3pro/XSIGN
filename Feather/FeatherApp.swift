@@ -8,14 +8,15 @@ struct FeatherApp: App {
     @StateObject var downloadManager = DownloadManager.shared
     let storage = Storage.shared
     
+    // Màu thương hiệu Xanh Navy
     let brandColor = Color(red: 0.0, green: 0.12, blue: 0.35)
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(\.managedObjectContext, storage.context)
-                // FIX LỖI CRASH: Bơm object này vào môi trường để các view con dùng
-                .environmentObject(downloadManager)
+                // 👇 [QUAN TRỌNG] Dòng này sửa lỗi crash khi vào Settings 👇
+                .environmentObject(downloadManager) 
                 .accentColor(brandColor)
                 .onOpenURL(perform: handleURL)
                 .onAppear {
