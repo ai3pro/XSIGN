@@ -25,6 +25,7 @@ final class SourcesViewModel: ObservableObject {
     func fetchSources(_ sources: FetchedResults<AltSource>, refresh: Bool = false, batchSize: Int = 4) async {
         guard isFinished else { return }
         
+        // Kiểm tra nếu dữ liệu đã có thì không load lại trừ khi refresh
         if !refresh, sources.allSatisfy({ self.sources[$0] != nil }) { return }
         
         isFinished = false
@@ -41,9 +42,10 @@ final class SourcesViewModel: ObservableObject {
             let endIndex = min(startIndex + batchSize, sourcesArray.count)
             let batch = sourcesArray[startIndex..<endIndex]
             
-            // SỬA LỖI: Chỉ trích xuất dữ liệu cần thiết (ID và URL), không truyền AltSource vào Task
+            // FIX LỖI: Chuyển đổi sang ID và URL để an toàn khi chạy đa luồng (Sendable)
             let batchData = batch.map { (id: $0.objectID, url: $0.sourceURL) }
             
+            // Xử lý tải dữ liệu song song
             let batchResults = await withTaskGroup(of: (NSManagedObjectID, ASRepository?).self, returning: [NSManagedObjectID: ASRepository].self) { group in
                 for item in batchData {
                     group.addTask {
@@ -51,6 +53,7 @@ final class SourcesViewModel: ObservableObject {
                             return (item.id, nil)
                         }
                         
+                        // Giả lập fetch async an toàn
                         return await withCheckedContinuation { continuation in
                             self._dataService.fetch(from: url) { (result: RepositoryDataHandler) in
                                 switch result {
@@ -73,9 +76,10 @@ final class SourcesViewModel: ObservableObject {
                 return results
             }
             
+            // Cập nhật giao diện trên Main Thread
             await MainActor.run {
                 for (id, repo) in batchResults {
-                    // Tái tạo lại object từ ID trên Main Thread
+                    // Lấy lại object từ ID một cách an toàn
                     if let source = try? context.existingObject(with: id) as? AltSource {
                         self.sources[source] = repo
                     }
