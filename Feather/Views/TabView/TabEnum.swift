@@ -1,8 +1,9 @@
 import SwiftUI
 
-enum Tab: String, CaseIterable {
+// Đổi tên từ Tab -> AppTab để tránh lỗi
+enum AppTab: String, CaseIterable {
     case library
-    case buyCert // Tab VIP mới
+    case buyCert
     case settings
     
     var title: LocalizedStringKey {
@@ -16,7 +17,7 @@ enum Tab: String, CaseIterable {
     var icon: String {
         switch self {
         case .library: return "square.stack.3d.up.fill"
-        case .buyCert: return "crown.fill" // Icon Vương miện cho VIP
+        case .buyCert: return "crown.fill"
         case .settings: return "gearshape.fill"
         }
     }
