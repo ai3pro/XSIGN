@@ -43,7 +43,8 @@ struct VariedTabbarView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.top, 10)
                             .padding(.bottom, 5)
-                            .foregroundColor(tab == item ? Color(UIColor(Color(hex: userTintColor) ?? .blue)) : .gray)
+                            // SỬA: Dùng safeHex thay vì hex để tránh lỗi ambiguous
+                            .foregroundColor(tab == item ? Color(safeHex: userTintColor) ?? .blue : .gray)
                         }
                     }
                 }
@@ -61,17 +62,17 @@ struct VariedTabbarView: View {
         case .library:
             LibraryView() // Màn hình danh sách App đã cài
         case .buyCert:
-            BuyCertView() // Màn hình Mua VIP (Bạn đã tạo ở Bước 1)
+            BuyCertView() // Màn hình Mua VIP
         case .settings:
             SettingsView() // Màn hình Cài đặt ThaiSon iOS
         }
     }
 }
 
-// Hàm hỗ trợ đổi mã màu Hex (nếu chưa có)
+// SỬA: Đổi tên hàm init thành safeHex để không trùng với thư viện khác
 extension Color {
-    init?(hex: String) {
-        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+    init?(safeHex: String) {
+        var hexSanitized = safeHex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
 
         var rgb: UInt64 = 0
