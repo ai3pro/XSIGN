@@ -5,7 +5,11 @@ import IDeviceSwift
 @main
 struct FeatherApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    // Khởi tạo các Manager quan trọng
     @StateObject var downloadManager = DownloadManager.shared
+    @StateObject var optionsManager = OptionsManager.shared // <--- THÊM CÁI NÀY
+    
     let storage = Storage.shared
     
     // Màu thương hiệu Xanh Navy
@@ -14,9 +18,15 @@ struct FeatherApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // 1. CoreData (Dữ liệu app)
                 .environment(\.managedObjectContext, storage.context)
-                // 👇 [QUAN TRỌNG] Dòng này sửa lỗi crash khi vào Settings 👇
-                .environmentObject(downloadManager) 
+                
+                // 2. Download Manager (Quản lý tải xuống - Fix crash Library)
+                .environmentObject(downloadManager)
+                
+                // 3. Options Manager (Quản lý cài đặt - FIX CRASH SETTING)
+                .environmentObject(optionsManager)
+                
                 .accentColor(brandColor)
                 .onOpenURL(perform: handleURL)
                 .onAppear {
